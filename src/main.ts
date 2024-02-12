@@ -88,6 +88,26 @@ export default class HarpoonPlugin extends Plugin {
 				},
 			});
 		}
+
+		const setFiles = [
+			{ id: 1, name: "Set File 1" },
+			{ id: 2, name: "Set File 2" },
+			{ id: 3, name: "Set File 3" },
+			{ id: 4, name: "Set File 4" },
+		];
+
+		for (const file of setFiles) {
+			this.addCommand({
+				id: `set-file-${file.id}`,
+				name: `${file.name}`,
+				callback: () => {
+					const activeFile = this.utils.getActiveFile();
+					if (activeFile) {
+						this.addToHarpoonAt(activeFile, file.id - 1);
+					}
+				},
+			});
+		}
 	}
 
 	registerDomEvents() {
@@ -223,6 +243,27 @@ export default class HarpoonPlugin extends Plugin {
 			this.showInStatusBar(`File ${file.name} added to harpoon`);
 		}
 	}
+
+	async addToHarpoonAt(file: TFile, idx: number) {
+
+		while (this.utils.hookedFiles.length < idx) {
+			this.utils.hookedFiles.push({
+				ctime: file.stat.ctime,
+				path: file.path,
+				title: file.name,
+				cursor: this.utils.getCursorPos(),
+			});
+		}
+		this.utils.hookedFiles.splice(idx, 1, {
+				ctime: file.stat.ctime,
+				path: file.path,
+				title: file.name,
+				cursor: this.utils.getCursorPos(),
+			});
+		this.writeHarpoonCache();
+		this.showInStatusBar(`File ${file.name} added to harpoon at ${idx}`);
+	}
+
 
 	// Visual queues
 	showInStatusBar(text: string, time = 5000) {
